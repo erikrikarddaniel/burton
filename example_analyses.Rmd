@@ -1,0 +1,59 @@
+---
+title: "Example TARA analyses"
+author: "daniel.lundin@lnu.se"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapse: no
+    fig_caption: yes
+    code_folding: hide
+  pdf_document:
+    fig_caption: yes
+    fig_height: 9
+    fig_width: 8
+    number_sections: yes
+    toc: yes
+---
+
+```{r setup, echo=F, cache = FALSE}
+knitr::opts_chunk$set(echo=F, fig.path='figures/', cache = TRUE)
+ggplot2::theme_set(ggplot2::theme_bw())
+```
+
+```{r libraries, message=F, cache = FALSE}
+suppressPackageStartupMessages(library(readr))
+suppressPackageStartupMessages(library(feather))
+suppressPackageStartupMessages(library(dplyr, warn.conflicts = FALSE))
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(purrr))
+suppressPackageStartupMessages(library(stringr))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(kfigr))
+suppressPackageStartupMessages(library(knitr))
+```
+
+```{r constants}
+```
+
+```{r read-data}
+# Read all idxstats feather files
+idxstats <- tibble(fn = Sys.glob("data/idxstats.*.feather")) %>% # Create a table with all file names
+  mutate(
+    d = map(fn, read_feather) # Read each idxstats table into a *cell*
+  ) %>% 
+  unnest(d) %>% # Expand each table from its cell
+  mutate(sample = str_remove(sample, "\\.genomes.*")) %>% # Remove trailing characters from sample name
+  select(-fn) # Get rid of the file name column
+
+# Read the samples table
+samples <- read_feather("data/simple_sample_table.feather")
+```
+
+```{r check-samples-table}
+# Find samples in the idxstats table that are not present in the samples table
+idxstats %>% distinct(sample) %>%
+  anti_join(samples, by = "sample")
+```
+
