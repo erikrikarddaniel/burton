@@ -72,7 +72,9 @@ idxstats %>%
   inner_join(gindex, by = c("sequence" = "contig")) %>%
   group_by(genome, depth_code) %>% 
   summarise(n_mapped = sum(n_mapped), .groups = 'drop') %>%
-  ggplot(aes(x = genome, y = n_mapped, fill = depth_code)) +
-  geom_col()
+  ggplot(aes(x = genome, y = n_mapped, colour = depth_code)) +
+  geom_point() +
+  scale_y_log10() +
+  coord_flip()
 ```
 
