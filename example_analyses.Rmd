@@ -37,7 +37,7 @@ suppressPackageStartupMessages(library(knitr))
 ```{r constants}
 ```
 
-```{r read-data}
+```{r read-idxstats-data}
 # Read all idxstats feather files
 idxstats <- tibble(fn = Sys.glob("data/idxstats.*.feather")) %>% # Create a table with all file names
   mutate(
@@ -46,14 +46,33 @@ idxstats <- tibble(fn = Sys.glob("data/idxstats.*.feather")) %>% # Create a tabl
   unnest(d) %>% # Expand each table from its cell
   mutate(sample = str_remove(sample, "\\.genomes.*")) %>% # Remove trailing characters from sample name
   select(-fn) # Get rid of the file name column
+```
 
+```{r read-ref-data}
 # Read the samples table
 samples <- read_feather("data/simple_sample_table.feather")
+
+# Read the genome index
+gindex <- read_tsv(
+  "data/genomeindex.tsv",
+  col_names = c("contig", "genome"),
+  col_types = "cc"
+)
 ```
 
 ```{r check-samples-table}
 # Find samples in the idxstats table that are not present in the samples table
 idxstats %>% distinct(sample) %>%
   anti_join(samples, by = "sample")
+```
+
+```{r}
+idxstats %>%
+  inner_join(samples, by = "sample") %>%
+  inner_join(gindex, by = c("sequence" = "contig")) %>%
+  group_by(genome, depth_code) %>% 
+  summarise(n_mapped = sum(n_mapped), .groups = 'drop') %>%
+  ggplot(aes(x = genome, y = n_mapped, fill = depth_code)) +
+  geom_col()
 ```
 
