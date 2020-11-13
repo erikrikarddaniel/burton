@@ -6,3 +6,5 @@ You need to download files from Box to this directory:
 * All files starting with "idxstats." from the "TARA/results/summary" directory
 
 * The simple_sample_table.feather from the "TARA/reference_data" directory
+
+* The genomeindex.tsv file from the "TARA/reference_data" directory
