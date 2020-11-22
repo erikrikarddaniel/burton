@@ -98,7 +98,7 @@ Something about how we did the mapping of genomic TARA reads to genomes.
 
 Something about the below plot (`r figr('genome-overview', T, type = 'Figure')`).
 
-```{r genome-overview, fig.width = 12}
+```{r genome-overview, fig.width = 12, fig.cap='**Total relative abundance per genome.** *Note*, numbers were not divided by the number of samples; i.e. not means.'}
 # Create a plot of how much each genome attracted in total in the different depth classes.
 idxstats %>%
   # Join in samples to get the depth code for each sample
