@@ -48,6 +48,28 @@ idxstats <- tibble(fn = Sys.glob("data/idxstats.*.feather")) %>% # Create a tabl
   select(-fn) # Get rid of the file name column
 ```
 
+```{r read-samplecounts}
+samplecounts <- tibble(fn = Sys.glob("data/samplecounts.*.tsv")) %>%
+  mutate(
+    d = map(fn, function(f) read_tsv(f, col_names = c('sample', 'size'), col_types = 'ci'))
+  ) %>%
+  unnest(d) %>%
+  select(-fn) %>%
+  # Get rid of duplicates. (They shouldn't be in the input.)
+  distinct()
+```
+
+```{r calc-relab}
+# To calculate relative abundances, i.e. counts from idxstats divided by total library sizes,
+# join the two tables and create a new column.
+# Assign the result to a new table with the same name as the old, overwriting the old.
+idxstats <- idxstats %>%
+  inner_join(samplecounts, by = 'sample') %>%
+  mutate(relab = n_mapped/size) %>%
+  select(-size)
+```
+
+
 ```{r read-ref-data}
 # Read the samples table
 samples <- read_feather("data/simple_sample_table.feather")
@@ -60,21 +82,41 @@ gindex <- read_tsv(
 )
 ```
 
-```{r check-samples-table}
+```{r check-samples-table, include = FALSE}
 # Find samples in the idxstats table that are not present in the samples table
 idxstats %>% distinct(sample) %>%
   anti_join(samples, by = "sample")
 ```
 
-```{r}
+# Introduction
+
+# Materials and methods
+
+Something about how we did the mapping of genomic TARA reads to genomes.
+
+# Results
+
+Something about the below plot (`r figr('genome-overview', T, type = 'Figure')`).
+
+```{r genome-overview, fig.width = 12}
+# Create a plot of how much each genome attracted in total in the different depth classes.
 idxstats %>%
+  # Join in samples to get the depth code for each sample
   inner_join(samples, by = "sample") %>%
+  # Join in gindex to get the name of the organism
   inner_join(gindex, by = c("sequence" = "contig")) %>%
+  # To sum, group by the variables to sum over...
   group_by(genome, depth_code) %>% 
-  summarise(n_mapped = sum(n_mapped), .groups = 'drop') %>%
-  ggplot(aes(x = genome, y = n_mapped, colour = depth_code)) +
+  # then do the sum. (The .groups argument avoids a warning and leaves the data in a sortable, useful state.)
+  summarise(relab = sum(relab), .groups = 'drop') %>%
+  # Pass the data to the plotting functions; specify which variables you want to map to what part of the plot.
+  ggplot(aes(x = genome, y = relab, colour = depth_code)) +
+  # Do a dot plot
   geom_point() +
+  # Use a log scale so that both large and small numbers can be seen.
   scale_y_log10() +
+  xlab('Genome') + ylab('Relative abundance') +
+  # Flip the coordinate system to make genome labels easier to read.
   coord_flip()
 ```
 
