@@ -145,3 +145,28 @@ gindex %>% filter(grepl('Richelia', genome)) %>%
   theme(legend.position = 'bottom')
 ```
 
+```{r calothrix-latitude-dependency, fig.height = 8, fig.cap = "**Abundance of *Calothrix* as a function of latitude.**"}
+# Start with the genome table, subset to genomes matching "calothrix"
+gindex %>% filter(grepl('Calothrix', genome)) %>%
+  # Join in the table with relative abundances
+  inner_join(idxstats, by = c('contig' = 'sequence')) %>%
+  # Sum relative abundances by genome and sample, to get rid of the contig data
+  group_by(genome, sample) %>%
+  summarise(relab = sum(relab), .groups = 'drop') %>%
+  # Join in the sample table to get the latitude and depth_code.
+  inner_join(
+    # Filter the samples table to only contain the top three depths
+    samples %>% filter(depth_code %in% c('SRF', 'DCM', 'MES')), 
+    by = 'sample'
+  ) %>%
+  # We have all information, pass to ggplot and decide which type of data to plot where
+  ggplot(aes(x = abs(lat), y = relab, colour = depth_code)) +
+  # Make it a point plot
+  geom_point() +
+  # Create one subplot for each combination of genome and depth_code
+  facet_wrap(depth_code~genome, ncol = 8) +
+  xlab('abs(latitude)') + ylab('Relative abundance') +
+  # Move the colour legend to the bottom of the plot to give space for a longer x axis
+  theme(legend.position = 'bottom')
+```
+
