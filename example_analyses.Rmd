@@ -174,3 +174,22 @@ calothrix %>%
   theme(legend.position = 'bottom')
 ```
 
+```{r srf-dcm-correlation, fig.cap = "**Correlation between SRF and DCM.**"}
+calothrix %>% 
+  group_by(genome, station, lat = abs(round(lat)), depth_code) %>%
+  summarise(mean_relab = mean(relab), .groups = 'drop') %>%
+  pivot_wider(names_from = depth_code, values_from = mean_relab, values_fill = 0) %>%
+  ggplot(aes(x = SRF, y = DCM, colour = lat)) +
+  geom_point() +
+  scale_colour_viridis_c()
+```
+
+```{r srf-mes-correlation, fig.width = 8, fig.height = 6, fig.cap = "**Correlation between SRF and DCM.**"}
+calothrix %>% 
+  group_by(genome, station, lat = abs(round(lat)), depth_code) %>%
+  summarise(mean_relab = mean(relab), .groups = 'drop') %>%
+  pivot_wider(names_from = depth_code, values_from = mean_relab, values_fill = 0) %>%
+  ggplot(aes(x = SRF, y = MES, colour = lat)) +
+  geom_point() +
+  scale_colour_viridis_c()
+```
