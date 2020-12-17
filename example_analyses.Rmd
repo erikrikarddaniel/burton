@@ -104,6 +104,15 @@ calothrix <- gindex %>% filter(grepl('Calothrix', genome)) %>%
   )
 ```
 
+```{r create-topsamples}
+topsamples <- gindex %>% filter(genome == 'Calothrix rhizosoleniae SC01' | grepl('Richelia intra', genome)) %>%
+  inner_join(idxstats, by = c('contig' = 'sequence')) %>%
+  group_by(genome, sample) %>% summarise(relab = sum(relab), .groups = 'drop_last') %>%
+  top_n(n = 5, wt = relab) %>%
+  ungroup() %>%
+  distinct(sample)
+```
+
 # Introduction
 
 TEXT [@gloor2017]
@@ -200,6 +209,19 @@ calothrix %>%
   ggplot(aes(x = SRF, y = MES, colour = lat)) +
   geom_point() +
   scale_colour_viridis_c()
+```
+
+```{r topsamples-map, fig.height = 12, fig.cap = "**Proportions of *Calothrix* and *Richelia* spp. in the samples where they were most abundant.**"}
+gindex %>% 
+  filter(genome == 'Calothrix rhizosoleniae SC01' | grepl('Richelia intra', genome)) %>%
+  inner_join(idxstats, by = c('contig' = 'sequence')) %>%
+  group_by(sample, genome) %>% summarise(relab = sum(relab), .groups = 'drop') %>%
+  inner_join(samples, by = 'sample') %>%
+  semi_join(topsamples, by = 'sample') %>%
+  ggplot(aes(long, lat, size = relab)) +
+  geom_point() +
+  borders('world') +
+  facet_grid(genome~depth_code)
 ```
 
 # References
