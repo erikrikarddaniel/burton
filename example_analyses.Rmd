@@ -224,4 +224,20 @@ gindex %>%
   facet_grid(genome~depth_code)
 ```
 
+```{r top-station-plot, fig.width=12, fig.height=5, fig.cap='**Top 15 stations for three Richelia spp. and Calothrix.**'}
+gindex %>% 
+  filter(genome %in% c('Calothrix rhizosoleniae SC01', 'Richelia intracellularis HH01', 'Richelia intracellularis HM01', 'Richelia intracellularis RC01')) %>%
+  inner_join(idxstats, by = c('contig' = 'sequence')) %>%
+  group_by(genome, sample) %>% summarise(relab = sum(relab) , .groups = 'drop_last') %>%
+  top_n(15, wt = relab) %>%
+  #pivot_wider(names_from = genome, values_from = relab) %>%
+  inner_join(samples, by = 'sample') %>%
+  ggplot(aes(long, lat, size = relab, colour = genome)) +
+  geom_point(alpha = 0.5) +
+  borders('world') +
+  facet_wrap(~depth_code) +
+  theme(legend.position = 'bottom')
+
+```
+
 # References
